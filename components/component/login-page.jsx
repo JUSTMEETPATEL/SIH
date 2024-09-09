@@ -28,9 +28,7 @@ export function Login() {
     if (error) {
       setError(error.message);
     } else {
-      // Handle successful login
       console.log("Login successful");
-      // Redirect to dashboard or another page
     }
   };
 
