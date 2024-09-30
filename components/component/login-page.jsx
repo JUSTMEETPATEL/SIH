@@ -28,9 +28,6 @@ export function Login() {
     if (error) {
       setError(error.message);
     } else {
-      // Handle successful login
-      console.log("Successfull");
-      // Redirect to dashboard or another page
       window.location.href = "/institution"
     }
   };
