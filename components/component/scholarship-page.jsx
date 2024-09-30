@@ -12,28 +12,92 @@ const supabase = createClient(
 );
 
 export function Scholarship() {
+  const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
   const [tenth, setTenth] = useState("");
   const [twelfth, setTwelfth] = useState("");
+  const [aadhar, setAadhar] = useState(null);
+  const [tenthCertificate, setTenthCertificate] = useState(null);
+  const [twelfthCertificate, setTwelfthCertificate] = useState(null);
   const [error, setError] = useState("");
+
+  const getUserId = async () => {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error) {
+      console.error("Error getting user:", error.message);
+      return null;
+    }
+    return user ? user.id : null;
+  };
+
+const handleFileUpload = async (file, folderName) => {
+  const userId = await getUserId();
+  if (!userId) {
+    setError("User not authenticated");
+    return null;
+  }
+
+  const fileName = `${folderName}/${userId}/${file.name}`;
+
+  const { data, error } = await supabase.storage
+    .from("documents")
+    .upload(fileName, file);
+
+  if (error) {
+    setError(error.message);
+    console.error("Error uploading file: ", error.message);
+    return null;
+  }
+
+  const { data: publicUrlData, error: urlError } = supabase.storage
+    .from("documents")
+    .getPublicUrl(fileName);
+
+  if (urlError) {
+    setError(urlError.message);
+    console.error("Error getting public URL: ", urlError.message);
+    return null;
+  }
+
+  return publicUrlData.publicUrl;
+};
+
 
   const handleApplication = async (e) => {
     e.preventDefault();
 
-    const { data, error } = await supabase.from("registrations").insert([
-      {
-        name,
-        phone,
-        email,
-        reason,
-        "10th percentage": tenth,
-        "12th percentage": twelfth,
-        status: "verified",
-      },
-    ]);
+    setLoading(true);
+
+    const aadharUrl = await handleFileUpload(aadhar, "aadhar card");  
+    const tenthCertUrl = await handleFileUpload(tenthCertificate, "10th certificates");
+    const twelfthCertUrl =  await handleFileUpload(twelfthCertificate, "12th certificates");
+
+      console.log(aadharUrl, tenthCertUrl, twelfthCertUrl);
+
+    const { data, error } = await supabase
+      .from("registrations")
+      .insert([
+        {
+          name,
+          phone,
+          email,
+          reason,
+          "10th percentage": tenth,
+          "12th percentage": twelfth,
+          "aadhar card": aadharUrl,
+          "10th marksheet": tenthCertUrl,
+          "12th marksheet": twelfthCertUrl,
+          status: "verified",
+        },
+      ]);
+
+    setLoading(false);
 
     if (error) {
       setError(error.message);
@@ -43,6 +107,8 @@ export function Scholarship() {
   };
 
   return (
+    <>
+    {loading ? (<div>Loading...</div>) : (
     <div className="container mx-auto max-w-3xl py-12 px-4 md:px-0">
       <div className="space-y-4 text-center">
         <h1 className="text-3xl font-bold">Scholarship Application</h1>
@@ -125,15 +191,30 @@ export function Scholarship() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="aadhar">Aadhar Card</Label>
-              <Input id="aadhar" type="file" required />
+              <Input
+                id="aadhar"
+                type="file"
+                onChange={(e) => setAadhar(e.target.files[0])}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="tenth-certificate">10th Certificate</Label>
-              <Input id="tenth-certificate" type="file" required />
+              <Input
+                id="tenth-certificate"
+                type="file"
+                onChange={(e) => setTenthCertificate(e.target.files[0])}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="twelfth-certificate">12th Certificate</Label>
-              <Input id="twelfth-certificate" type="file" required />
+              <Input
+                id="twelfth-certificate"
+                type="file"
+                onChange={(e) => setTwelfthCertificate(e.target.files[0])}
+                required
+              />
             </div>
           </div>
         </div>
@@ -142,6 +223,7 @@ export function Scholarship() {
           <Button type="submit">Submit Application</Button>
         </div>
       </form>
-    </div>
+    </div>)}
+    </>
   );
 }

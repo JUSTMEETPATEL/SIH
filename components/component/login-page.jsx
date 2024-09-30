@@ -28,7 +28,7 @@ export function Login() {
     if (error) {
       setError(error.message);
     } else {
-      console.log("Login successful");
+      window.location.href = "/apply";
     }
   };
 
