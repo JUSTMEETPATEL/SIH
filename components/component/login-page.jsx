@@ -28,7 +28,7 @@ export function Login() {
     if (error) {
       setError(error.message);
     } else {
-      window.location.href = "/apply";
+      window.location.href = "/institution"
     }
   };
 
@@ -36,7 +36,7 @@ export function Login() {
     <div className="flex flex-col min-h-screen">
       <header className="bg-primary text-primary-foreground py-4 px-6">
         <div className="container mx-auto flex items-center justify-between">
-          <Link href="#" className="flex items-center gap-2" prefetch={false}>
+          <Link href="/" className="flex items-center gap-2" prefetch={false}>
             <MountainIcon className="h-6 w-6" />
             <span className="text-xl font-bold">Scholarship Platform</span>
           </Link>
